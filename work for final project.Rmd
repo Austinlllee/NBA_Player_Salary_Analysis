@@ -1,0 +1,371 @@
+---
+title: "NBA Player Salary Analysis"
+name: "Austin Lee"
+output: pdf_document
+date: "2024-04-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+- NBA0 Original CSV Raw Dataset
+-NBA1 dataset = model 1 with SM
+- NBA2 dataset = model without SM 
+```{r}
+# Load the data
+NBA0 <- read.csv("NBA.csv")
+
+# Show the first few rows to inspect the data
+head(NBA0)
+
+# Check the structure of the data to understand column types
+str(NBA0)
+
+# Remove rows with NA values
+NBA1 <- NBA0[complete.cases(NBA0), ]
+
+# Check the data after removal
+head(NBA1)
+
+
+
+# Step 1: Ensure 'Salary' is numeric
+NBA1$Salary <- as.numeric(gsub("[^0-9.-]", "", NBA1$Salary))
+
+# Step 2: Remove rows with NA in 'Salary'
+NBA1 <- NBA1[!is.na(NBA1$Salary), ]
+```
+Model 1 
+```{r}
+
+# multiple regression model
+model1 <- lm(Salary ~ OFFRTG + DEFRTG + PGP + SM + Award, data = NBA1)
+summary(model1)
+```
+
+
+Second Model wiithout Social Media variable (SM)
+```{r}
+
+# Remove SM
+NBA2 <- NBA1[, !names(NBA1) %in% "SM"]
+print(NBA2)
+
+
+model2 = lm(Salary ~ OFFRTG + DEFRTG + PGP + Award, data = NBA2)
+summary(model2)
+```
+
+```{r}
+# Remove SM
+NBA2 <- NBA1[, !names(NBA1) %in% "SM"]
+print(NBA2)
+
+summary(NBA2)
+
+# Calculate mean and standard deviation for continuous variables, handling missing values
+
+mean_salary <- mean(NBA2$Salary, na.rm = TRUE)
+sd_salary <- sd(NBA2$Salary, na.rm = TRUE)
+
+mean_offrtg <- mean(NBA2$OFFRTG, na.rm = TRUE)
+sd_offrtg <- sd(NBA2$OFFRTG, na.rm = TRUE)
+
+mean_defrtg <- mean(NBA2$DEFRTG, na.rm = TRUE)
+sd_defrtg <- sd(NBA2$DEFRTG, na.rm = TRUE)
+
+mean_pgp <- mean(NBA2$PGP, na.rm = TRUE)
+sd_pgp <- sd(NBA2$PGP, na.rm = TRUE)
+
+# Calculate frequency and proportion for categorical variable 'Award'
+award_frequency <- table(NBA2$Award)
+award_proportion <- prop.table(award_frequency)
+
+# Print mean and standard deviation for continuous variables
+cat("Mean Salary:", mean_salary, "\n")
+cat("Standard Deviation of Salary:", sd_salary, "\n")
+
+cat("Mean OFFRTG:", mean_offrtg, "\n")
+cat("Standard Deviation of OFFRTG:", sd_offrtg, "\n")
+
+cat("Mean DEFRTG:", mean_defrtg, "\n")
+cat("Standard Deviation of DEFRTG:", sd_defrtg, "\n")
+
+cat("Mean PGP:", mean_pgp, "\n")
+cat("Standard Deviation of PGP:", sd_pgp, "\n")
+
+# Print frequency and proportion for categorical variable 'Award'
+cat("Frequency of Awards (Award):\n")
+print(award_frequency)
+
+cat("Proportion of Awards (Award):\n")
+print(award_proportion)
+
+
+```
+
+```{r}
+# Load necessary package
+library(ggplot2)
+
+# Create a histogram of the dependent variable (Salary in millions)
+ggplot(NBA2, aes(x = Salary / 1000000)) +
+    geom_histogram(binwidth = 1, fill = "blue", color = "black", alpha = 0.7) +
+    labs(title = "Histogram of NBA Player Salary (in millions)",
+         x = "Salary (in millions)",
+         y = "Frequency") +
+    theme_minimal()
+
+
+
+
+```
+
+```{r}
+# Create a boxplot of the dependent variable (Salary in millions)
+boxplot(NBA2$Salary / 1000000, 
+        main = "Boxplot of NBA Player Salary (in millions)",
+        ylab = "Salary (in millions)",
+        col = "lightblue",
+        outline = TRUE)
+
+```
+
+```{r}
+# Find the summary statistics for the Salary variable
+summary(NBA2$Salary)
+
+
+
+```
+
+```{r}
+# Load necessary libraries
+library(corrplot)
+
+# Assuming NBA2 data frame is already loaded
+
+# Step 1: Check for missing values
+missing_values <- sum(is.na(NBA2))
+cat("Number of missing values in the data:", missing_values, "\n")
+
+# Step 2: Handle missing values
+# Option 1: Remove rows with missing values
+NBA2_clean <- na.omit(NBA2)
+
+# Step 3: Calculate correlation matrix
+corr_matrix <- cor(NBA2_clean[, c("OFFRTG", "DEFRTG", "PGP", "Award")])
+
+# Step 4: Create a heatmap of the correlation matrix
+corrplot(corr_matrix, method = "color", type = "upper",
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         title = "Correlation Heatmap of Explanatory Variables")
+
+```
+
+```{r}
+# Load necessary packages
+library(car)
+library(dplyr)
+
+# Assuming NBA2 data frame is already loaded
+# Select the explanatory variables from the dataset
+explanatory_vars <- NBA2 %>% select(OFFRTG, DEFRTG, PGP, Award)
+
+# Fit a linear model using the explanatory variables and the dependent variable (Salary)
+model <- lm(Salary ~ OFFRTG + DEFRTG + PGP + Award, data = NBA2)
+
+# Calculate VIF for each explanatory variable
+vif_values <- vif(model)
+
+# Print the VIF values
+print(vif_values)
+```
+
+```{r}
+# 4 models
+S1 <- lm(Salary ~ OFFRTG, data = NBA2)
+S2 <- lm(Salary ~ OFFRTG + DEFRTG, data = NBA2)
+S3 <- lm(Salary ~ OFFRTG + DEFRTG + PGP, data = NBA2)
+S4 <- lm(Salary ~ OFFRTG + DEFRTG + PGP + Award, data = NBA2)
+
+# Compute the 95% confidence intervals for each model and print them
+
+# Model S1: lm(Salary ~ OFFRTG, data = NBA2)
+ci_S1 <- confint(S1)
+print("Model S1: 95% Confidence Intervals")
+print(ci_S1)
+
+# Model S2: lm(Salary ~ OFFRTG + DEFRTG, data = NBA2)
+ci_S2 = confint(S2)
+print("\nModel S2: 95% Confidence Intervals")
+print(ci_S2)
+
+# Model S3: lm(Salary ~ OFFRTG + DEFRTG + PGP, data = NBA2)
+ci_S3 = confint(S3)
+print("\nModel S3: 95% Confidence Intervals")
+print(ci_S3)
+
+# Model S4: lm(Salary ~ OFFRTG + DEFRTG + PGP + Award, data = NBA2)
+ci_S4 = confint(S4)
+print("\nModel S4: 95% Confidence Intervals")
+print(ci_S4)
+
+```
+
+```{r}
+# Assuming you have defined your models as S1, S2, S3, S4 and you have your NBA2 data set loaded
+
+# Calculate fitted values for Model S1
+fitted_values_S1 <- predict(S1, newdata = NBA2)
+
+# Calculate fitted values for Model S2
+fitted_values_S2 <- predict(S2, newdata = NBA2)
+
+# Calculate fitted values for Model S3
+fitted_values_S3 <- predict(S3, newdata = NBA2)
+
+# Calculate fitted values for Model S4
+fitted_values_S4 <- predict(S4, newdata = NBA2)
+
+# Display the fitted values for each model
+print(fitted_values_S1)
+print(fitted_values_S2)
+print(fitted_values_S3)
+print(fitted_values_S4)
+
+            
+
+```
+
+```{r}
+# Assuming you have defined your models as S1, S2, S3, S4 and you have your NBA2 data set loaded
+
+# Calculate confidence and prediction intervals for Model S1
+conf_int_S1 <- predict(S1, newdata = NBA2, interval = "confidence")
+pred_int_S1 <- predict(S1, newdata = NBA2, interval = "prediction")
+
+# Calculate confidence and prediction intervals for Model S2
+conf_int_S2 = predict(S2, newdata = NBA2, interval = "confidence")
+pred_int_S2 = predict(S2, newdata = NBA2, interval = "prediction")
+
+# Calculate confidence and prediction intervals for Model S3
+conf_int_S3 = predict(S3, newdata = NBA2, interval = "confidence")
+pred_int_S3 = predict(S3, newdata = NBA2, interval = "prediction")
+
+# Calculate confidence and prediction intervals for Model S4
+conf_int_S4 = predict(S4, newdata = NBA2, interval = "confidence")
+pred_int_S4 = predict(S4, newdata = NBA2, interval = "prediction")
+
+# Display the intervals for each model
+print("Model S1: Confidence Interval")
+print(conf_int_S1)
+print("Model S1: Prediction Interval")
+print(pred_int_S1)
+
+print("Model S2: Confidence Interval")
+print(conf_int_S2)
+print("Model S2: Prediction Interval")
+print(pred_int_S2)
+
+print("Model S3: Confidence Interval")
+print(conf_int_S3)
+print("Model S3: Prediction Interval")
+print(pred_int_S3)
+
+print("Model S4: Confidence Interval")
+print(pred_int_S4)
+```
+
+```{r}
+# Assuming you have defined your models as S1, S2, S3, S4 and you have your NBA2 data set loaded
+
+# Calculate fitted values for each model
+fitted_values_S1 <- predict(S1, newdata = NBA2)
+fitted_values_S2 <- predict(S2, newdata = NBA2)
+fitted_values_S3 <- predict(S3, newdata = NBA2)
+fitted_values_S4 <- predict(S4, newdata = NBA2)
+
+# Display the first 5 comparisons of actual and fitted values for each model
+
+# Model S1
+cat("Model S1: Actual vs. Fitted Values\n")
+comparison_S1 <- data.frame(
+    Actual = NBA2$Salary[1:5],
+    Fitted = fitted_values_S1[1:5]
+)
+print(comparison_S1)
+
+# Model S2
+cat("\nModel S2: Actual vs. Fitted Values\n")
+comparison_S2 <- data.frame(
+    Actual = NBA2$Salary[1:5],
+    Fitted = fitted_values_S2[1:5]
+)
+print(comparison_S2)
+
+# Model S3
+cat("\nModel S3: Actual vs. Fitted Values\n")
+comparison_S3 <- data.frame(
+    Actual = NBA2$Salary[1:5],
+    Fitted = fitted_values_S3[1:5]
+)
+print(comparison_S3)
+
+# Model S4
+cat("\nModel S4: Actual vs. Fitted Values\n")
+comparison_S4 <- data.frame(
+    Actual = NBA2$Salary[1:5],
+    Fitted = fitted_values_S4[1:5]
+)
+print(comparison_S4)
+```
+
+```{r}
+
+# Calculate residuals for each model
+residuals_S1 <- residuals(S1)
+residuals_S2 <- residuals(S2)
+residuals_S3 <- residuals(S3)
+residuals_S4 <- residuals(S4)
+
+# Find the smallest and largest residuals for Model S1
+smallest_residual_S1 <- min(residuals_S1, na.rm = TRUE)
+largest_residual_S1 <- max(residuals_S1, na.rm = TRUE)
+
+# Find the smallest and largest residuals for Model S2
+smallest_residual_S2 <- min(residuals_S2, na.rm = TRUE)
+largest_residual_S2 <- max(residuals(S2), na.rm = TRUE)
+
+# Find the smallest and largest residuals for Model S3
+smallest_residual_S3 <- min(residuals_S3, na.rm = TRUE)
+largest_residual_S3 <- max(residuals_S3, na.rm = TRUE)
+
+# Find the smallest and largest residuals for Model S4
+smallest_residual_S4 <- min(residuals_S4, na.rm = TRUE)
+largest_residual_S4 <- max(residuals_S4, na.rm = TRUE)
+
+# Display the results
+cat("Model S1: Smallest Residual:", smallest_residual_S1, "\n")
+cat("Model S1: Largest Residual:", largest_residual_S1, "\n")
+cat("\n")
+
+cat("Model S2: Smallest Residual:", smallest_residual_S2, "\n")
+cat("Model S2: Largest Residual:", largest_residual_S2, "\n")
+cat("\n")
+
+cat("Model S3: Smallest Residual:", smallest_residual_S3, "\n")
+cat("Model S3: Largest Residual:", largest_residual_S3, "\n")
+cat("\n")
+
+cat("Model S4: Smallest Residual:", smallest_residual_S4, "\n")
+cat("Model S4: Largest Residual:", largest_residual_S4, "\n")
+
+```
