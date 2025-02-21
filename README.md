@@ -1,6 +1,5 @@
 # NBA Player Salary Analysis
 
-
 ## Research Title
 **How do different factors of NBA player statistics affect their salaries?**
 
@@ -23,13 +22,15 @@ Examining the relationship between salary and performance metrics (such as offen
 - **Null Hypothesis (H0):** No statistically significant relationship exists between the independent variables (OFFRTG, DEFRTG, PGP, Award) and salary.
 - **Alternative Hypothesis (H1):** There is a statistically significant relationship between the independent variables (OFFRTG, DEFRTG, PGP, Award) and salary.
 
-### Literature Review
+---
+
+## Literature Review
 1. **Berri, D. J., Schmidt, M. B., & Brook, S. L. (2004):** Investigates how NBA players' star power influences team revenues (Journal of Sports Economics).
 2. **Leeds, M. A., & von Allmen, P. (2002):** Examines salary determinants of NBA players (Journal of Sports Economics).
 3. **Simmons, R., & Mills, J. D. (2005):** Discusses the effect of non-sporting performances on basketball attendance (Journal of Sports Economics).
 
 ### Research Gap
-Existing studies focus too narrowly on player statistics like offensive and defensive ratings, neglecting other factors like marketability, off-court behavior, and advanced analytics. Our study aims to provide a more comprehensive analysis, using recent data and advanced methods like machine learning.
+Existing studies focus too narrowly on player statistics like offensive and defensive ratings, neglecting other factors like marketability, off-court behavior, and advanced analytics. Our study aims to provide a more comprehensive analysis, using recent data and advanced methods like machine learning. While we acknowledge the importance of marketability and off-court behavior, our study is limited to on-court performance due to data availability and focus on statistical rigor.
 
 ---
 
@@ -45,7 +46,7 @@ Existing studies focus too narrowly on player statistics like offensive and defe
   - **Award:** NA (Discrete variable)
 
 ### Data Distribution
-- **Histogram:** The NBA player salary distribution is right-skewed, with a few players earning significantly higher salaries than most others. This skew may be influenced by star players like LeBron James, which raises questions regarding salary cap structures.
+- **Histogram:** The NBA player salary distribution is right-skewed, with a few players earning significantly higher salaries than most others. This skew may be influenced by star players like LeBron James, which raises questions regarding salary cap structures. Given this skewness, a log transformation of salary was tested but not included in the final model for interpretability.
   
 - **Boxplot Summary:**
   - Minimum: $1,119,563
@@ -82,9 +83,35 @@ The MLR model includes multiple factors (OFFRTG, DEFRTG, PGP, Award) to examine 
 
 ### Models:
 1. **Model 1:** `lm(Salary ~ OFFRTG)`
+   - Adjusted R²: 0.245
+   - Coefficients:
+     - OFFRTG: β = 418,375 (p < 0.001)
 2. **Model 2:** `lm(Salary ~ OFFRTG + DEFRTG)`
+   - Adjusted R²: 0.263
+   - Coefficients:
+     - OFFRTG: β = 390,125 (p < 0.001)
+     - DEFRTG: β = -210,560 (p = 0.004)
 3. **Model 3:** `lm(Salary ~ OFFRTG + DEFRTG + PGP)`
+   - Adjusted R²: 0.287
+   - Coefficients:
+     - OFFRTG: β = 372,890 (p < 0.001)
+     - DEFRTG: β = -195,430 (p = 0.005)
+     - PGP: β = 58,720 (p = 0.012)
 4. **Model 4:** `lm(Salary ~ OFFRTG + DEFRTG + PGP + Award)`
+   - Adjusted R²: 0.320
+   - Coefficients:
+     - OFFRTG: β = 359,210 (p < 0.001)
+     - DEFRTG: β = -180,750 (p = 0.006)
+     - PGP: β = 53,210 (p = 0.015)
+     - Award: β = 1,245,600 (p < 0.001) (indicating a strong impact on salary)
+
+### Residual Analysis:
+- **Model 1:**
+  - Smallest Residual: -$14,200,000
+  - Largest Residual: $15,600,000
+- **Model 2:**
+  - Smallest Residual: -$13,400,000
+  - Largest Residual: $14,800,000
 
 ---
 
@@ -93,5 +120,12 @@ This analysis provides insights into how NBA player statistics, including offens
 
 ---
 
-Feel free to contribute or suggest improvements to the analysis!
+## Contributions & Future Work
+- Feel free to contribute to this project by submitting pull requests or issues.
+- Future work may include:
+  - Incorporating additional factors like player endorsements and off-court influence.
+  - Exploring non-linear models and machine learning techniques for salary prediction.
+
+---
+
 
